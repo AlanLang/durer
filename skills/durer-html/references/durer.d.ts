@@ -19,7 +19,7 @@
  *
  * 在 `<head>` 里引入运行时（版本号写死，不写 `latest`），元素就能用了，不用写任何初始化脚本：
  *
- *     <script src="https://cdn.jsdelivr.net/npm/durer@0.1.0/dist/durer.js"></script>
+ *     <script src="https://cdn.jsdelivr.net/npm/durerjs@0.1.0/dist/durer.js"></script>
  *
  * ## 代码都写在 `<script>` 子元素里
  *

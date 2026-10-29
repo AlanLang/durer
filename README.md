@@ -15,7 +15,7 @@ AI 写的讲解型 HTML 的运行时。页面用一个 `<script>` 引入，就�
 | `<dr-katex>` | TeX 公式，KaTeX 排成浏览器原生 MathML，行内或 `display` 块级 |
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/durer@0.1.0/dist/durer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/durerjs@0.1.0/dist/durer.js"></script>
 ```
 
 ## 产物
@@ -24,7 +24,7 @@ AI 写的讲解型 HTML 的运行时。页面用一个 `<script>` 引入，就�
 |---|---|
 | `dist/durer.js` | 页面引入的运行时入口（~20 KB gzip）。React + retikz + 编译器在 `async/live.js`，CodeMirror 和各语言语法在 `async/editor.js`（编辑器、`<dr-code>` 高亮共用），KaTeX 在 `async/math.js`，用到才下载，地址跟着 `durer.js` 自己走 |
 | `dist/durer.d.ts` | 写页面的 AI 读的接口：顶部是 `src/authoring.md` 编写指导，后面是元素属性和 `window.durer` |
-| `dist/lint.js` | `import { lint } from "durer/lint"`：落盘前校验，和运行时共用编译器与白名单 |
+| `dist/lint.js` | `import { lint } from "durerjs/lint"`：落盘前校验，和运行时共用编译器与白名单 |
 | `skills/durer-html/` | Claude Code skill：SKILL.md + 同步进来的 `durer.d.ts`、`retikz.d.ts`、`lint.mjs` |
 
 ## 开发

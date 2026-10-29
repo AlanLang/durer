@@ -44033,23 +44033,23 @@ function lint(html) {
   return issues.sort((a, b) => a.line - b.line);
 }
 function checkRuntimeScript(elements, issues) {
-  const scripts = elements.filter((el) => el.tagName === "script" && /\bdurer(@[^/]+)?\/dist\/durer\.js|\/durer\.js$/.test(attr(el, "src") ?? ""));
+  const scripts = elements.filter((el) => el.tagName === "script" && /\bdurerjs(@[^/]+)?\/dist\/durer\.js|\/durer\.js$/.test(attr(el, "src") ?? ""));
   if (scripts.length === 0) {
     issues.push({
       level: "error",
       line: 1,
       element: "<head>",
-      message: '没有引入运行时：在 <head> 里写 <script src="https://cdn.jsdelivr.net/npm/durer@<版本>/dist/durer.js"></script>'
+      message: '没有引入运行时：在 <head> 里写 <script src="https://cdn.jsdelivr.net/npm/durerjs@<版本>/dist/durer.js"></script>'
     });
     return;
   }
   const src = attr(scripts[0], "src") ?? "";
-  if (/cdn|unpkg|npm/.test(src) && !/durer@\d+\.\d+\.\d+/.test(src)) {
+  if (/cdn|unpkg|npm/.test(src) && !/durerjs@\d+\.\d+\.\d+/.test(src)) {
     issues.push({
       level: "warning",
       line: lineOf(scripts[0]),
       element: "<script>",
-      message: "运行时地址要写死完整版本号（durer@x.y.z）：页面是长期产物，不该跟着新版本变"
+      message: "运行时地址要写死完整版本号（durerjs@x.y.z）：页面是长期产物，不该跟着新版本变"
     });
   }
 }

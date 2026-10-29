@@ -3,7 +3,7 @@ import { lint } from "./index";
 
 const page = (
   body: string,
-  head = '<script src="https://cdn.jsdelivr.net/npm/durer@0.1.0/dist/durer.js"></script>',
+  head = '<script src="https://cdn.jsdelivr.net/npm/durerjs@0.1.0/dist/durer.js"></script>',
 ) => `<!doctype html>\n<html>\n<head>${head}</head>\n<body>\n${body}\n</body>\n</html>`;
 
 const messages = (html: string) => lint(html).map((issue) => `${issue.level}:${issue.message}`);
@@ -15,7 +15,7 @@ describe("运行时引入", () => {
 
   test("CDN 地址没写死版本提醒", () => {
     const issues = lint(
-      page("", '<script src="https://cdn.jsdelivr.net/npm/durer/dist/durer.js"></script>'),
+      page("", '<script src="https://cdn.jsdelivr.net/npm/durerjs/dist/durer.js"></script>'),
     );
     expect(issues[0]?.level).toBe("warning");
   });

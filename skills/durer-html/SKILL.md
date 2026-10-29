@@ -46,7 +46,7 @@ S=~/.claude/skills/durer-html
 ## 3. 写页面
 
 - 文件放在用户指定的位置；没指定就放当前目录，文件名用英文短横线（`react-rendering.html`）。
-- `<head>` 里第一件事是引入运行时：`durer.d.ts` 顶部给的 `<script src="…durer@x.y.z/dist/durer.js">`。
+- `<head>` 里第一件事是引入运行时：`durer.d.ts` 顶部给的 `<script src="…durerjs@x.y.z/dist/durer.js">`。
 - 页面自己写完整的 CSS：版心、字体、标题层级、代码样式、亮暗色（`:root { color-scheme: light dark }`）。
   durer 的元素会跟着页面的 `color-scheme` 切换，配色用 `--durer-*` 变量微调（见 d.ts）。
 - 演示源码写在 `<script type="text/jsx">` 里，展示的代码写在 `<script type="text/plain">` 里，`<` `>` 原样写，不转义；

@@ -1,5 +1,5 @@
 {
-  "name": "durer",
+  "name": "durerjs",
   "version": "0.1.0",
   "description": "AI 写的讲解型 HTML 的运行时：一个 <script> 引入，页面里就能放可编辑的 React 演示、retikz 图和悬浮解释",
   "type": "module",
@@ -14,7 +14,8 @@
     "./dist/*": "./dist/*"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/lint-cli.js"
   ],
   "scripts": {
     "dev": "rsbuild dev",
@@ -27,6 +28,7 @@
     "lint:fix": "biome check --write .",
     "type:check": "tsc --noEmit",
     "check": "bun run lint && bun run type:check && bun run test && bun run build",
+    "prepublishOnly": "bun run check",
     "prepare": "husky"
   },
   "dependencies": {},
