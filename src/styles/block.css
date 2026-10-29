@@ -105,9 +105,11 @@ button:focus-visible {
   display: flex;
   gap: 2px;
   padding: 6px 8px 0;
-  border-bottom: 1px solid var(--_border);
+  /* 下边线画成内阴影：选中的标签用背景盖住它，不用往外伸 1px 撑出纵向滚动条 */
+  box-shadow: inset 0 -1px 0 var(--_border);
   background: var(--_surface);
   overflow-x: auto;
+  overflow-y: hidden;
 }
 .tabs[hidden],
 .pane[hidden] {
@@ -123,7 +125,6 @@ button:focus-visible {
   color: var(--_fg);
   background: var(--_bg);
   border-color: var(--_border);
-  margin-bottom: -1px;
 }
 /* 编辑器加载前先把源码原样摆出来，加载完再换掉：不闪空白，没 JS 也看得到代码 */
 .fallback {
