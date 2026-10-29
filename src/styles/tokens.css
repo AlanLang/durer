@@ -1,0 +1,28 @@
+/*
+ * 所有元素共用的设计变量。颜色用 light-dark()：跟着页面的 color-scheme 走，
+ * 页面写 `:root { color-scheme: light dark }` 就跟随系统，写 `dark` 就固定暗色；没写是亮色。
+ * 页面想改配色就在 :root 上覆盖 --durer-*，下划线开头的是内部变量。
+ */
+:host {
+  color-scheme: inherit;
+  --_bg: var(--durer-bg, light-dark(#ffffff, #18191c));
+  --_surface: var(--durer-surface, light-dark(#f6f7f9, #202227));
+  --_border: var(--durer-border, light-dark(#e3e5e9, #34373e));
+  --_fg: var(--durer-fg, light-dark(#1f2328, #e6e7ea));
+  --_muted: var(--durer-muted, light-dark(#6b7280, #9aa1ab));
+  --_accent: var(--durer-accent, light-dark(#2f6feb, #6ea8fe));
+  --_error: var(--durer-error, light-dark(#b42318, #ff8f85));
+  --_error-bg: light-dark(#fef3f2, #3a1d1b);
+  --_selection: light-dark(#d7e5ff, #2c3e5c);
+  --_active-line: light-dark(#f2f4f8, #23262c);
+  --_radius: var(--durer-radius, 10px);
+  --_mono: var(--durer-font-mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
+  --_syn-keyword: light-dark(#cf222e, #ff7b72);
+  --_syn-string: light-dark(#0a3069, #a5d6ff);
+  --_syn-number: light-dark(#0550ae, #79c0ff);
+  --_syn-comment: light-dark(#6e7781, #8b949e);
+  --_syn-function: light-dark(#8250df, #d2a8ff);
+  --_syn-tag: light-dark(#116329, #7ee787);
+  --_syn-attr: light-dark(#0550ae, #79c0ff);
+  --_syn-def: light-dark(#953800, #ffa657);
+}

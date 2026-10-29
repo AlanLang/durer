@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>durer · 让 AI 写的 HTML 会演示、会画图、会解释</title>
+    <script src="./durer.js"></script>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#f6f5fb, #09090f);
+        --bg-soft: light-dark(#ffffff, #11111a);
+        --fg: light-dark(#17161f, #ecebf5);
+        --muted: light-dark(#5d5b6e, #9d9bb0);
+        --line: light-dark(#e3e1ee, #24233a);
+        --violet: #8b6cff;
+        --cyan: #00b8d9;
+        --pink: #ff5ca8;
+        --amber: #ffb020;
+        --green: #1a9f55;
+        --blue: #2f8cff;
+        --grad: linear-gradient(120deg, var(--violet), var(--cyan) 50%, var(--pink));
+        --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+        --durer-bg: light-dark(#ffffff, #10101a);
+        --durer-surface: light-dark(#f4f3fa, #161624);
+        --durer-border: light-dark(#e3e1ee, #26253c);
+        --durer-accent: #8b6cff;
+        --durer-radius: 14px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font: 16px/1.75 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      a {
+        color: inherit;
+      }
+      code {
+        white-space: nowrap;
+        font: 0.88em var(--mono);
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: color-mix(in srgb, var(--violet) 12%, transparent);
+      }
+
+      /* ---------- 首屏 ---------- */
+      .hero {
+        position: relative;
+        min-height: 92vh;
+        display: grid;
+        place-items: center;
+        padding: 96px 16px 72px;
+        isolation: isolate;
+        overflow: hidden;
+      }
+      .aurora {
+        position: absolute;
+        inset: -20%;
+        z-index: -2;
+        filter: blur(80px);
+        opacity: 0.55;
+        mask-image: linear-gradient(to bottom, #000 55%, transparent 92%);
+      }
+      .aurora span {
+        position: absolute;
+        width: 46vmax;
+        height: 46vmax;
+        border-radius: 50%;
+        animation: drift 18s ease-in-out infinite alternate;
+      }
+      .aurora span:nth-child(1) { background: var(--violet); top: 5%; left: 10%; }
+      .aurora span:nth-child(2) { background: var(--cyan); top: 25%; right: 5%; animation-duration: 22s; animation-delay: -6s; }
+      .aurora span:nth-child(3) { background: var(--pink); bottom: 0; left: 35%; animation-duration: 26s; animation-delay: -12s; }
+      @keyframes drift {
+        to { transform: translate(8vmax, -6vmax) scale(1.15); }
+      }
+      .grid-bg {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background-image:
+          linear-gradient(color-mix(in srgb, var(--fg) 7%, transparent) 1px, transparent 1px),
+          linear-gradient(90deg, color-mix(in srgb, var(--fg) 7%, transparent) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+      }
+      .hero-inner {
+        width: min(1080px, 100%);
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 56px;
+        align-items: center;
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 12px 4px 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--bg-soft) 70%, transparent);
+        backdrop-filter: blur(8px);
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .eyebrow b {
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: var(--grad);
+        color: #fff;
+        font-weight: 600;
+        font-size: 12px;
+      }
+      h1 {
+        margin: 20px 0 16px;
+        font-size: clamp(56px, 9vw, 104px);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+        font-weight: 800;
+        background: linear-gradient(110deg, var(--fg) 20%, var(--violet) 45%, var(--pink) 60%, var(--fg) 85%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shine 8s linear infinite;
+      }
+      @keyframes shine {
+        to { background-position: 200% center; }
+      }
+      .tagline {
+        margin: 0 0 12px;
+        font-size: clamp(22px, 2.6vw, 30px);
+        line-height: 1.35;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .lede {
+        margin: 0 0 28px;
+        color: var(--muted);
+        font-size: 17px;
+        max-width: 34em;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+      .btn.primary {
+        background: var(--grad);
+        color: #fff;
+        box-shadow: 0 10px 30px -10px var(--violet);
+      }
+      .btn.ghost {
+        border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--bg-soft) 70%, transparent);
+        backdrop-filter: blur(8px);
+      }
+      .code-card {
+        position: relative;
+        border-radius: 18px;
+        padding: 1px;
+        background: linear-gradient(140deg, color-mix(in srgb, var(--violet) 70%, transparent), transparent 40%, color-mix(in srgb, var(--cyan) 70%, transparent));
+        box-shadow: 0 40px 80px -40px color-mix(in srgb, var(--violet) 60%, transparent);
+        transform: perspective(1200px) rotateY(-8deg) rotateX(4deg);
+        transition: transform 0.6s;
+      }
+      .code-card:hover {
+        transform: none;
+      }
+      .code-card dr-code {
+        margin: 0;
+        --durer-surface: transparent;
+        --durer-border: transparent;
+        --durer-radius: 0;
+      }
+      .cols dr-code {
+        margin: 0;
+      }
+      .start-code {
+        max-width: 780px;
+        margin: 0 auto 28px;
+        text-align: left;
+      }
+      .code-card-inner {
+        border-radius: 17px;
+        background: color-mix(in srgb, var(--bg-soft) 92%, transparent);
+        backdrop-filter: blur(14px);
+        overflow: hidden;
+      }
+      .dots {
+        display: flex;
+        gap: 6px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .dots i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--line);
+      }
+      .dots i:nth-child(1) { background: #ff5f57; }
+      .dots i:nth-child(2) { background: #febc2e; }
+      .dots i:nth-child(3) { background: #28c840; }
+      .dots span {
+        margin-left: auto;
+        font: 12px var(--mono);
+        color: var(--muted);
+      }
+
+      /* ---------- 版心 ---------- */
+      .wide {
+        width: min(1080px, 100% - 32px);
+        margin: 0 auto;
+      }
+      .prose {
+        width: min(800px, 100% - 32px);
+        margin: 0 auto;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--bg-soft);
+        margin-top: -36px;
+        position: relative;
+      }
+      .stats div {
+        padding: 22px 24px;
+      }
+      .stats div + div {
+        border-left: 1px solid var(--line);
+      }
+      .stats strong {
+        display: block;
+        font-size: 30px;
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        background: var(--grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .stats span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin: 96px auto 40px;
+      }
+      .feature {
+        position: relative;
+        padding: 28px 26px 26px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: var(--bg-soft);
+        text-decoration: none;
+        overflow: hidden;
+        transition: transform 0.3s, border-color 0.3s;
+      }
+      .feature::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(400px circle at 0% 0%, color-mix(in srgb, var(--c) 18%, transparent), transparent 60%);
+        pointer-events: none;
+      }
+      .feature:hover {
+        transform: translateY(-4px);
+        border-color: color-mix(in srgb, var(--c) 60%, transparent);
+      }
+      .feature .num {
+        font: 600 13px var(--mono);
+        color: var(--c);
+      }
+      .feature h3 {
+        margin: 10px 0 8px;
+        font-size: 21px;
+      }
+      .feature h3 code {
+        font-size: 0.82em;
+        background: color-mix(in srgb, var(--c) 14%, transparent);
+      }
+      .feature p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      section.chapter {
+        padding: 72px 0 24px;
+      }
+      .chapter-head {
+        display: flex;
+        align-items: baseline;
+        gap: 18px;
+        margin-bottom: 8px;
+      }
+      .chapter-head .idx {
+        font: 800 64px/1 var(--mono);
+        letter-spacing: -0.04em;
+        color: transparent;
+        -webkit-text-stroke: 1.5px color-mix(in srgb, var(--c) 80%, transparent);
+      }
+      h2 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 42px);
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+      }
+      .kicker {
+        margin: 6px 0 28px;
+        font-size: 19px;
+        color: var(--muted);
+      }
+      h3.sub {
+        margin: 48px 0 8px;
+        font-size: 21px;
+      }
+      .note {
+        margin: 20px 0;
+        padding: 14px 18px;
+        border-left: 3px solid var(--c, var(--violet));
+        border-radius: 0 12px 12px 0;
+        background: color-mix(in srgb, var(--c, var(--violet)) 8%, transparent);
+        font-size: 15px;
+      }
+      .try {
+        margin: 24px 0;
+        padding: 22px 24px;
+        border: 1px dashed color-mix(in srgb, var(--pink) 50%, transparent);
+        border-radius: 16px;
+        background: color-mix(in srgb, var(--pink) 5%, transparent);
+        font-size: 17px;
+        line-height: 2;
+      }
+      .try .label {
+        display: block;
+        margin-bottom: 4px;
+        font: 600 12px var(--mono);
+        letter-spacing: 0.08em;
+        color: var(--pink);
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .cta {
+        position: relative;
+        margin: 96px auto 0;
+        padding: 64px 32px;
+        border-radius: 28px;
+        text-align: center;
+        overflow: hidden;
+        isolation: isolate;
+        border: 1px solid var(--line);
+      }
+      .cta::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: var(--grad);
+        opacity: 0.14;
+      }
+      .cta h2 {
+        font-size: clamp(28px, 4vw, 40px);
+      }
+      .cta p {
+        color: var(--muted);
+        margin: 10px 0 28px;
+      }
+      footer {
+        padding: 48px 16px 64px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      /* 气泡里的内容吃页面样式 */
+      dr-bubble p {
+        margin: 0 0 8px;
+      }
+      dr-bubble strong {
+        color: var(--violet);
+      }
+
+      @media (max-width: 860px) {
+        .hero-inner,
+        .features,
+        .cols {
+          grid-template-columns: 1fr;
+        }
+        .code-card {
+          transform: none;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .stats div:nth-child(3) {
+          border-left: none;
+        }
+        .stats div:nth-child(n + 3) {
+          border-top: 1px solid var(--line);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="grid-bg" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <div>
+          <span class="eyebrow"><b>v0.1</b>一个 &lt;script&gt;，六个新元素</span>
+          <h1>durer</h1>
+          <p class="tagline">让 AI 写的 HTML<br />会演示、会画图、会解释。</p>
+          <p class="lede">
+            页面还是那份原生 HTML，排版和配色全归你。durer 只补上 HTML 自己做不到、或者手写容易错的几件事：
+            读者能改的 React 演示、TikZ 风格的示意图、悬停就出来的解释、高亮代码、分步讲解和数学公式。
+          </p>
+          <div class="actions">
+            <a class="btn primary" href="#demo">往下滑，直接上手 →</a>
+            <a class="btn ghost" href="#start">快速开始</a>
+          </div>
+        </div>
+        <div class="code-card">
+          <div class="code-card-inner">
+            <div class="dots"><i></i><i></i><i></i><span>explainer.html</span></div>
+            <dr-code lang="html" highlight="2">
+              <script type="text/plain">
+                <!-- 引入运行时，就这一行 -->
+                <script src="…/durer.js"><\/script>
+
+                <dr-react title="计数器">
+                  <script type="text/jsx"> … <\/script>
+                </dr-react>
+
+                <dr-retikz caption="架构">
+                  <script type="text/jsx"><Layout> … </Layout><\/script>
+                </dr-retikz>
+
+                <dr-tip tip="…">术语</dr-tip>
+                <dr-katex>E = mc^2</dr-katex>
+              </script>
+            </dr-code>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="wide stats">
+      <div><strong>1 行</strong><span>引入，不写初始化代码</span></div>
+      <div><strong>6 个</strong><span>元素，各管一件事</span></div>
+      <div><strong>~20 KB</strong><span>首屏入口（gzip），其余按需加载</span></div>
+      <div><strong>0 次</strong><span>构建，源码直接写在页面里</span></div>
+    </div>
+
+    <nav class="wide features" aria-label="六种能力">
+      <a class="feature" href="#demo" style="--c: var(--violet)">
+        <span class="num">01</span>
+        <h3><code>&lt;dr-react&gt;</code></h3>
+        <p>左边效果、右边源码。读者改一个字，250 毫秒后画面跟着变；写错了也不白屏。</p>
+      </a>
+      <a class="feature" href="#diagram" style="--c: var(--cyan)">
+        <span class="num">02</span>
+        <h3><code>&lt;dr-retikz&gt;</code></h3>
+        <p>用 JSX 声明节点和连线，画结构、流程、关系。能循环生成，能让读者展开源码重画。</p>
+      </a>
+      <a class="feature" href="#tip" style="--c: var(--pink)">
+        <span class="num">03</span>
+        <h3><code>&lt;dr-tip&gt;</code></h3>
+        <p>正文里的难词悬停即解释。一句话、富文本、全页共用一份，气泡里还能再套气泡。</p>
+      </a>
+      <a class="feature" href="#code" style="--c: var(--amber)">
+        <span class="num">04</span>
+        <h3><code>&lt;dr-code&gt;</code></h3>
+        <p>只展示的代码：语法高亮、标出重点行、diff、多文件标签页、一键复制。不用再手拼 span。</p>
+      </a>
+      <a class="feature" href="#steps" style="--c: var(--green)">
+        <span class="num">05</span>
+        <h3><code>&lt;dr-steps&gt;</code></h3>
+        <p>一步一步讲一个过程。一张图读 <code>step</code> 跟着变，翻页、方向键、自动播放都有。</p>
+      </a>
+      <a class="feature" href="#math" style="--c: var(--blue)">
+        <span class="num">06</span>
+        <h3><code>&lt;dr-katex&gt;</code></h3>
+        <p>TeX 写公式，KaTeX 排成浏览器原生的 MathML。行内、块级、放进气泡都行。</p>
+      </a>
+    </nav>
+
+    <main>
+      <!-- ============ 01 ============ -->
+      <section class="chapter prose" id="demo" style="--c: var(--violet)">
+        <div class="chapter-head"><span class="idx">01</span><h2>代码不只是给人看的</h2></div>
+        <p class="kicker">把 React 组件写进页面，读者当场就能改、当场看到结果。</p>
+        <p>
+          源码就写在 <code>&lt;script type="text/jsx"&gt;</code> 里，浏览器不会执行它，durer 会用
+          <dr-tip ref="sucrase">sucrase</dr-tip> 在页面里即时编译、渲染。拖一下滑块，再去右边把
+          <code>hsl</code> 的亮度改成 <code>40%</code> 试试。
+        </p>
+
+        <dr-react title="渐变生成器" preview-height="300">
+          <script type="text/jsx">
+            import { useState } from "react";
+
+            const gradient = (h, a, s) =>
+              `linear-gradient(${a}deg, hsl(${h} ${s}% 62%), hsl(${(h + 60) % 360} ${s}% 55%), hsl(${(h + 140) % 360} ${s}% 52%))`;
+
+            export default function Gradient() {
+              const [hue, setHue] = useState(260);
+              const [angle, setAngle] = useState(120);
+              const [sat, setSat] = useState(90);
+              const bg = gradient(hue, angle, sat);
+              return (
+                <div className="wrap">
+                  <div className="swatch" style={{ background: bg }}>durer</div>
+                  <Slider label="色相" value={hue} max={360} onChange={setHue} />
+                  <Slider label="角度" value={angle} max={360} onChange={setAngle} />
+                  <Slider label="饱和度" value={sat} max={100} onChange={setSat} />
+                  <code>{bg}</code>
+                </div>
+              );
+            }
+
+            function Slider({ label, value, max, onChange }) {
+              return (
+                <label>
+                  <span>{label}</span>
+                  <input type="range" min={0} max={max} value={value}
+                    onChange={(e) => onChange(Number(e.target.value))} />
+                  <b>{value}</b>
+                </label>
+              );
+            }
+          </script>
+          <style>
+            .wrap { display: grid; gap: 10px; }
+            .swatch { height: 120px; border-radius: 14px; display: grid; place-items: center;
+              color: #fff; font: 800 34px/1 system-ui; letter-spacing: -0.03em;
+              box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.5); }
+            label { display: grid; grid-template-columns: 4em 1fr 3em; align-items: center; gap: 10px; font-size: 14px; }
+            input { accent-color: #8b6cff; }
+            b { font: 600 13px ui-monospace, monospace; text-align: right; }
+            code { font: 11px/1.5 ui-monospace, monospace; opacity: 0.7; word-break: break-all; }
+          </style>
+        </dr-react>
+
+        <p>
+          每个演示都关在自己的 <dr-tip ref="shadow-dom">Shadow DOM</dr-tip> 里：演示里写的
+          <code>label { … }</code> 不会弄乱你的页面，页面的样式也漏不进演示。
+        </p>
+
+        <h3 class="sub">动起来的也行</h3>
+        <p>
+          <code>useEffect</code>、<code>requestAnimationFrame</code>、指针事件都是真的。下面是一个弹簧跟随：
+          把鼠标移进框里，然后把 <code>STIFFNESS</code> 改大、<code>DAMPING</code> 改小，感受它变得多「弹」。
+        </p>
+
+        <dr-react title="弹簧跟随" layout="stack" preview-height="220">
+          <script type="text/jsx">
+            import { useEffect, useRef, useState } from "react";
+
+            // 改这两个数：刚度越大越弹，阻尼越小越晃
+            const STIFFNESS = 0.08;
+            const DAMPING = 0.82;
+
+            export default function Spring() {
+              const box = useRef(null);
+              const target = useRef({ x: 120, y: 90 });
+              const [pos, setPos] = useState(target.current);
+
+              useEffect(() => {
+                const p = { ...target.current };
+                const v = { x: 0, y: 0 };
+                let frame;
+                const tick = () => {
+                  for (const k of ["x", "y"]) {
+                    v[k] = (v[k] + (target.current[k] - p[k]) * STIFFNESS) * DAMPING;
+                    p[k] += v[k];
+                  }
+                  setPos({ ...p });
+                  frame = requestAnimationFrame(tick);
+                };
+                frame = requestAnimationFrame(tick);
+                return () => cancelAnimationFrame(frame);
+              }, []);
+
+              const follow = (e) => {
+                const r = box.current.getBoundingClientRect();
+                target.current = { x: e.clientX - r.left, y: e.clientY - r.top };
+              };
+
+              return (
+                <div ref={box} className="field" onPointerMove={follow}>
+                  <div className="ball" style={{ transform: `translate(${pos.x - 18}px, ${pos.y - 18}px)` }} />
+                  <span className="hint">把鼠标移进来</span>
+                </div>
+              );
+            }
+          </script>
+          <style>
+            .field { position: relative; height: 200px; border-radius: 14px; overflow: hidden; cursor: crosshair;
+              background: radial-gradient(circle at 1px 1px, color-mix(in srgb, currentColor 18%, transparent) 1px, transparent 0) 0 0 / 18px 18px; }
+            .ball { position: absolute; width: 36px; height: 36px; border-radius: 50%;
+              background: linear-gradient(135deg, #8b6cff, #00b8d9); box-shadow: 0 0 30px #8b6cff; }
+            .hint { position: absolute; right: 14px; bottom: 10px; font-size: 13px; opacity: 0.55; }
+          </style>
+        </dr-react>
+
+        <div class="note">
+          把代码改坏试试：删掉一个括号，下方会出现带行号的报错，而上面还留着上一版能跑的画面；改回来就恢复。
+          点标题栏的「重置」随时回到原始代码。
+        </div>
+
+        <h3 class="sub">React 里也能画图</h3>
+        <p>
+          画图引擎 <dr-tip ref="retikz">retikz</dr-tip> 本身就是 React 组件，在演示里 import 进来，
+          图就成了状态的函数 —— 拖动滑块，环上的节点数跟着变。
+        </p>
+
+        <dr-react title="状态驱动的图" preview-height="360">
+          <script type="text/jsx">
+            import { useState } from "react";
+            import { Draw, Layout, Node } from "@retikz/react";
+
+            export default function Ring() {
+              const [n, setN] = useState(6);
+              const points = Array.from({ length: n }, (_, i) => {
+                const a = (i / n) * 2 * Math.PI - Math.PI / 2;
+                return { id: `n${i}`, x: Math.cos(a) * 110, y: Math.sin(a) * 110 };
+              });
+              return (
+                <div className="ring">
+                  <label>
+                    节点数 <input type="range" min={3} max={12} value={n}
+                      onChange={(e) => setN(Number(e.target.value))} /> <b>{n}</b>
+                  </label>
+                  <Layout width={300}>
+                    <Node id="hub" position={[0, 0]} shape="circle" stroke="#8b6cff" fill="#8b6cff" fillOpacity={0.18}>核心</Node>
+                    {points.map((p, i) => (
+                      <Node key={p.id} id={p.id} position={[p.x, p.y]} shape="circle"
+                        stroke="#00b8d9" fill="#00b8d9" fillOpacity={0.15}>{i + 1}</Node>
+                    ))}
+                    {points.map((p) => (
+                      <Draw key={`s-${p.id}`} way={["hub", p.id]} arrow="->" stroke="#8b6cff" />
+                    ))}
+                    {points.map((p, i) => (
+                      <Draw key={`r-${p.id}`} way={[p.id, points[(i + 1) % n].id]} stroke="#00b8d9" dashPattern={[3, 3]} />
+                    ))}
+                  </Layout>
+                </div>
+              );
+            }
+          </script>
+          <style>
+            .ring { display: grid; justify-items: center; gap: 12px; }
+            label { font-size: 14px; display: flex; align-items: center; gap: 10px; }
+            input { accent-color: #00b8d9; }
+          </style>
+        </dr-react>
+
+        <h3 class="sub">长了就拆成多个文件</h3>
+        <p>
+          每个 <code>&lt;script&gt;</code> 写上 <code>data-file</code>，编辑器就变成标签页，文件之间用相对路径
+          <code>import</code>。样式也可以是一个文件：切到 <code>style.css</code> 把 <code>.done</code> 改个颜色，
+          列表里勾掉的事项不会丢 —— 改样式不重挂组件。
+        </p>
+
+        <dr-react title="待办清单" layout="stack" preview-height="250">
+          <script type="text/jsx" data-file="App.jsx">
+            import { useState } from "react";
+            import { useTodos } from "./useTodos";
+            import "./style.css";
+
+            export default function App() {
+              const { todos, add, toggle, remaining } = useTodos(["读 durer.d.ts", "写页面", "跑 lint"]);
+              const [text, setText] = useState("");
+              const submit = (e) => {
+                e.preventDefault();
+                if (text.trim()) add(text.trim());
+                setText("");
+              };
+              return (
+                <div className="todo">
+                  <form onSubmit={submit}>
+                    <input value={text} onChange={(e) => setText(e.target.value)} placeholder="加一件事，回车" />
+                  </form>
+                  <ul>
+                    {todos.map((t) => (
+                      <li key={t.id} className={t.done ? "done" : ""} onClick={() => toggle(t.id)}>{t.text}</li>
+                    ))}
+                  </ul>
+                  <p className="left">还剩 {remaining} 件</p>
+                </div>
+              );
+            }
+          </script>
+          <script type="text/jsx" data-file="useTodos.js">
+            import { useState } from "react";
+
+            let nextId = 1;
+            const item = (text) => ({ id: nextId++, text, done: false });
+
+            export function useTodos(initial) {
+              const [todos, setTodos] = useState(() => initial.map(item));
+              const add = (text) => setTodos((list) => [...list, item(text)]);
+              const toggle = (id) =>
+                setTodos((list) => list.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+              return { todos, add, toggle, remaining: todos.filter((t) => !t.done).length };
+            }
+          </script>
+          <script type="text/css" data-file="style.css">
+            .todo { display: grid; gap: 10px; max-width: 360px; }
+            input { width: 100%; padding: 8px 12px; border-radius: 10px; font: inherit; color: inherit;
+              border: 1px solid color-mix(in srgb, currentColor 25%, transparent); background: transparent; }
+            ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+            li { padding: 8px 12px; border-radius: 10px; cursor: pointer;
+              background: color-mix(in srgb, #8b6cff 12%, transparent); }
+            .done { text-decoration: line-through; opacity: 0.45; }
+            .left { margin: 0; font-size: 13px; opacity: 0.6; }
+          </script>
+        </dr-react>
+      </section>
+
+      <!-- ============ 02 ============ -->
+      <section class="chapter prose" id="diagram" style="--c: var(--cyan)">
+        <div class="chapter-head"><span class="idx">02</span><h2>图，用代码画</h2></div>
+        <p class="kicker">节点和连线写成 JSX，坐标、样式、箭头都是属性，AI 写得准，人也改得动。</p>
+        <p>
+          <code>&lt;dr-retikz&gt;</code> 里写一个 <code>&lt;Layout&gt;</code> 表达式就是一张图，
+          写法借鉴 LaTeX 的 <dr-tip ref="tikz">TikZ</dr-tip>。下面是 durer 自己的加载方式：
+          只有用到演示和图时，大块的依赖才会被<dr-tip ref="chunk">按需加载</dr-tip>。点「源码」可以展开改。
+        </p>
+
+        <dr-retikz caption="durer 的加载：入口很小，重的部分等用到再下载" show-code>
+          <script type="text/jsx">
+            <Layout>
+              <Node id="page" position={[0, 0]} shape={{ type: "rectangle", params: { cornerRadius: 8 } }}
+                stroke="#8b6cff" fill="#8b6cff" fillOpacity={0.12} padding={12}>你的 HTML 页面</Node>
+              <Node id="entry" position={[0, 110]} shape={{ type: "rectangle", params: { cornerRadius: 8 } }}
+                stroke="#8b6cff" strokeWidth={2} fill="#8b6cff" fillOpacity={0.22} padding={12}
+                font={{ weight: "bold" }}>{"durer.js\n入口 ~15 KB"}</Node>
+              <Node id="tip" position={[-230, 250]} shape={{ type: "rectangle", params: { cornerRadius: 8 } }}
+                stroke="#ff5ca8" fill="#ff5ca8" fillOpacity={0.12} padding={10}>{"<dr-tip>\n入口就够"}</Node>
+              <Node id="live" position={[0, 250]} shape={{ type: "rectangle", params: { cornerRadius: 8 } }}
+                stroke="#00b8d9" fill="#00b8d9" fillOpacity={0.12} padding={10}>{"live chunk\nReact · retikz · sucrase"}</Node>
+              <Node id="editor" position={[230, 250]} shape={{ type: "rectangle", params: { cornerRadius: 8 } }}
+                stroke="#ffb020" fill="#ffb020" fillOpacity={0.14} padding={10}>{"editor chunk\nCodeMirror"}</Node>
+              <Draw way={["page", { label: { text: "一个 <script>", side: "right", font: { size: 13 } } }, "entry"]}
+                arrow="->" stroke="#8b6cff" thickness="thick" />
+              <Draw way={["entry", "-|", "tip"]} arrow="->" stroke="#ff5ca8" />
+              <Draw way={["entry", { label: { text: "有演示或图", side: "right", font: { size: 13 } } }, "live"]}
+                arrow="->" stroke="#00b8d9" dashPattern={[5, 4]} />
+              <Draw way={["entry", "-|", "editor"]} arrow="->" stroke="#ffb020" dashPattern={[5, 4]} />
+            </Layout>
+          </script>
+        </dr-retikz>
+
+        <p>
+          实线是一定会走的路，虚线只在页面用到时才走：一页纯文字加几个术语解释，只下载入口那 15 KB；
+          有演示或图时，才去取 React 和编译器；编辑器则要等第一个源码面板展开。
+        </p>
+
+        <h3 class="sub">要循环？写成模块</h3>
+        <p>
+          图的源码也可以是一个模块：顶层先算好坐标，再 <code>export default</code> 一个返回
+          <code>&lt;Layout&gt;</code> 的组件。下面这张放射图的每个节点位置都是用三角函数算出来的。
+        </p>
+
+        <dr-retikz caption="durer 的三个元素，和它们各自的拿手好戏" show-code>
+          <script type="text/jsx">
+            const BRANCHES = [
+              { name: "dr-react", color: "#8b6cff", angle: -90, leaves: ["实时编译", "出错不白屏", "样式隔离"] },
+              { name: "dr-retikz", color: "#00b8d9", angle: 30, leaves: ["JSX 画图", "可展开源码", "随深浅色"] },
+              { name: "dr-tip", color: "#ff5ca8", angle: 150, leaves: ["富文本", "全页共用", "气泡套气泡"] },
+            ];
+            const at = (deg, r) => [Math.cos((deg * Math.PI) / 180) * r, Math.sin((deg * Math.PI) / 180) * r];
+
+            export default function Radial() {
+              return (
+                <Layout>
+                  <Node id="core" position={[0, 0]} shape="circle" minimumSize={92} strokeWidth={2}
+                    stroke="#8b6cff" fill="#8b6cff" fillOpacity={0.16} font={{ size: 20, weight: "bold" }}>durer</Node>
+                  {BRANCHES.map((b) => (
+                    <Node key={b.name} id={b.name} position={at(b.angle, 140)}
+                      shape={{ type: "rectangle", params: { cornerRadius: 14 } }} padding={8}
+                      stroke={b.color} fill={b.color} fillOpacity={0.16} font={{ size: 14, weight: "bold" }}>{b.name}</Node>
+                  ))}
+                  {BRANCHES.flatMap((b) =>
+                    b.leaves.map((leaf, i) => (
+                      <Node key={leaf} id={leaf} position={at(b.angle + (i - 1) * 26, 250)}
+                        font={{ size: 13 }} stroke={b.color} dashed padding={6}
+                        shape={{ type: "rectangle", params: { cornerRadius: 10 } }}>{leaf}</Node>
+                    )),
+                  )}
+                  {BRANCHES.map((b) => (
+                    <Draw key={`c-${b.name}`} way={["core", b.name]} stroke={b.color} thickness="thick" />
+                  ))}
+                  {BRANCHES.flatMap((b) =>
+                    b.leaves.map((leaf) => <Draw key={`l-${leaf}`} way={[b.name, leaf]} stroke={b.color} opacity={0.7} />),
+                  )}
+                </Layout>
+              );
+            }
+          </script>
+        </dr-retikz>
+
+        <div class="note">
+          图默认用 <code>currentColor</code> 描边和写字，跟着页面的文字颜色走；填色用半透明，
+          亮色和暗色背景下都看得清。切一下系统的深浅色模式试试。
+        </div>
+      </section>
+
+      <!-- ============ 03 ============ -->
+      <section class="chapter prose" id="tip" style="--c: var(--pink)">
+        <div class="chapter-head"><span class="idx">03</span><h2>不懂的词，悬停就懂</h2></div>
+        <p class="kicker">解释不打断正文：想看的人停一下，不想看的人直接读下去。</p>
+
+        <div class="try">
+          <span class="label">TRY IT · 把鼠标停在带虚线的词上</span>
+          浏览器渲染页面时，会先把 HTML 解析成 <dr-tip tip="Document Object Model：浏览器在内存里表示页面的一棵节点树，JS 通过它读写页面。">DOM</dr-tip>，
+          再结合 CSS 算出每个元素的位置，这一步叫<dr-tip>回流<template>
+            <p><strong>回流（reflow）</strong>：重新计算元素的几何信息（位置、尺寸）。</p>
+            <p>读 <code>offsetHeight</code> 这类属性会强制同步回流，在循环里交替读写是性能杀手。</p>
+          </template></dr-tip>；
+          之后再把像素画到屏幕上。气泡挂在页面的<dr-tip ref="top-layer">顶层</dr-tip>，
+          放在 <code>overflow: hidden</code> 的容器里也不会被裁掉。
+        </div>
+
+        <p>三种写法，按解释的长短选：</p>
+        <dr-code>
+          <script type="text/plain" data-file="一句话.html">
+            <!-- tip 属性：纯文本 -->
+            <dr-tip tip="Document Object Model：浏览器在内存里表示页面的一棵节点树">DOM</dr-tip>
+          </script>
+          <script type="text/plain" data-file="富文本.html" data-highlight="2-5">
+            <!-- 子元素 template：段落、加粗、代码、链接都行 -->
+            <dr-tip>回流<template>
+              <p><strong>回流（reflow）</strong>：重新计算元素的几何信息。</p>
+              <p>读 <code>offsetHeight</code> 会强制同步回流。</p>
+            </template></dr-tip>
+          </script>
+          <script type="text/plain" data-file="全页共用.html" data-highlight="2,5">
+            <!-- ref 指向页面上任意位置的 template，同一个术语只写一份 -->
+            <dr-tip ref="top-layer">顶层</dr-tip>
+            …
+            <!-- 统一放在页面末尾 -->
+            <template id="top-layer"><p>…</p></template>
+          </script>
+        </dr-code>
+
+        <p>
+          上面「顶层」那个气泡里还藏着一个术语 —— 气泡可以套气泡，指针停在子气泡上时，父气泡不会关。
+          键盘用户用 <kbd>Tab</kbd> 聚焦到词上就能打开，<kbd>Esc</kbd> 关闭；手机上轻点即可。
+        </p>
+      </section>
+
+      <!-- ============ 04 ============ -->
+      <section class="chapter prose" id="code" style="--c: var(--amber)">
+        <div class="chapter-head"><span class="idx">04</span><h2>代码，好好地摆出来</h2></div>
+        <p class="kicker">不用运行的代码也值得认真对待：高亮、重点、改动，一眼看清。</p>
+        <p>
+          前面的弹簧演示里，<code>useEffect</code> 最后那行 <code>return</code> 很容易被忘掉。忘了会怎样？
+          组件卸载后 <code>requestAnimationFrame</code> 还在一帧帧地跑，还在给一个已经不在的组件
+          <code>setPos</code>。修起来就是加一行 —— 用 <code>diff</code> 一看就懂：
+        </p>
+
+        <dr-code lang="jsx" title="Spring.jsx" diff>
+          <script type="text/plain">
+             useEffect(() => {
+               let frame;
+               const tick = () => {
+                 /* …算下一帧的位置… */
+                 frame = requestAnimationFrame(tick);
+               };
+               frame = requestAnimationFrame(tick);
+            +  return () => cancelAnimationFrame(frame);
+             }, []);
+          </script>
+        </dr-code>
+
+        <p>
+          <code>&lt;dr-code&gt;</code> 自己怎么写？代码放进 <code>&lt;script type="text/plain"&gt;</code>，
+          <code>&lt;</code> 和 <code>&gt;</code> 原样写，不用转义；要写字面的 <code>&lt;/script&gt;</code> 时换成
+          <code>&lt;\/script&gt;</code>（高亮的那几行）。多个 <code>data-file</code> 就是标签页，就像这样：
+        </p>
+
+        <dr-code line-numbers>
+          <script type="text/plain" data-file="diff.html" data-highlight="1,5">
+            <dr-code lang="js" diff>
+              <script type="text/plain">
+                -  return a - b;
+                +  return a + b;
+              <\/script>
+            </dr-code>
+          </script>
+          <script type="text/plain" data-file="tabs.html" data-highlight="2,5">
+            <dr-code>
+              <script type="text/plain" data-file="App.jsx" data-highlight="3">
+                …
+              <\/script>
+              <script type="text/plain" data-file="style.css">
+                …
+              <\/script>
+            </dr-code>
+          </script>
+          <script type="text/plain" data-file="install.sh">
+            # 支持 jsx tsx js ts html css json bash，按扩展名自动认
+            bun add -d durer && echo "装好了"
+          </script>
+        </dr-code>
+      </section>
+
+      <!-- ============ 05 ============ -->
+      <section class="chapter prose" id="steps" style="--c: var(--green)">
+        <div class="chapter-head"><span class="idx">05</span><h2>一步一步来</h2></div>
+        <p class="kicker">过程类的知识，最好的讲法是把每一步摊开给读者看。</p>
+        <p>
+          二分查找为什么快？因为每比较一次，候选区间就砍掉一半。下面这张图会自己播放；也可以点「下一步」、
+          点圆点，或者聚焦后按 <kbd>←</kbd> <kbd>→</kbd> 翻页。整个过程只有<em>一张</em>图：它读当前的
+          <code>step</code>，决定哪些格子变暗、指针指向哪里。
+        </p>
+
+        <dr-steps title="在有序数组里找 26" autoplay interval="2600">
+          <dr-retikz>
+            <script type="text/jsx">
+              const ARR = [3, 8, 12, 17, 21, 26, 30, 35, 41];
+              const TARGET = 26;
+              const W = 64;
+
+              // 事先把每一步的 lo / hi / mid 算好；第 0 步还没开始比较
+              const STEPS = [{ lo: 0, hi: ARR.length - 1, mid: -1 }];
+              for (let lo = 0, hi = ARR.length - 1; lo <= hi; ) {
+                const mid = (lo + hi) >> 1;
+                STEPS.push({ lo, hi, mid });
+                if (ARR[mid] === TARGET) break;
+                if (ARR[mid] < TARGET) lo = mid + 1;
+                else hi = mid - 1;
+              }
+
+              export default function BinarySearch({ step = 0 }) {
+                const { lo, hi, mid } = STEPS[Math.min(step, STEPS.length - 1)];
+                const found = mid >= 0 && ARR[mid] === TARGET;
+                const tone = (i) => (i === mid ? (found ? "#1a9f55" : "#ff5ca8") : "#8b6cff");
+                return (
+                  <Layout>
+                    {ARR.map((v, i) => (
+                      <Node key={i} id={`c${i}`} position={[i * W, 0]} minimumSize={50}
+                        shape={{ type: "rectangle", params: { cornerRadius: 10 } }}
+                        stroke={tone(i)} strokeWidth={i === mid ? 2.5 : 1}
+                        fill={tone(i)} fillOpacity={i === mid ? 0.28 : 0.1}
+                        opacity={i >= lo && i <= hi ? 1 : 0.25}
+                        font={{ size: 17, weight: i === mid ? "bold" : "normal" }}>{String(v)}</Node>
+                    ))}
+                    <Node id="mid" position={[Math.max(mid, 0) * W, -58]} opacity={mid >= 0 ? 1 : 0} strokeOpacity={0}
+                      textColor={tone(mid)} font={{ size: 13, weight: "bold" }}>{found ? "mid ✓" : "mid ↓"}</Node>
+                    <Node id="lo" position={[lo * W, 54]} strokeOpacity={0} font={{ size: 13 }} textColor="#8b6cff">{lo === hi ? "lo = hi" : "↑ lo"}</Node>
+                    <Node id="hi" position={[hi * W, 54]} strokeOpacity={0} font={{ size: 13 }} textColor="#8b6cff" opacity={lo === hi ? 0 : 1}>↑ hi</Node>
+                  </Layout>
+                );
+              }
+            </script>
+          </dr-retikz>
+          <dr-step caption="一开始，整个数组都是候选：lo 在最左，hi 在最右"></dr-step>
+          <dr-step caption="看正中间的 21：比 26 小，左半边（连同 21）都不可能，lo 挪到 21 右边"></dr-step>
+          <dr-step caption="剩下 4 个，中间是 30：比 26 大，右半边不要了，hi 挪到 30 左边"></dr-step>
+          <dr-step caption="只剩一个，正好是 26 —— 9 个数只比了 3 次"></dr-step>
+        </dr-steps>
+
+        <div class="note">
+          每一步画的都是<em>同一组</em>节点，只改透明度、颜色和指针位置。节点不增不减，图的范围就不变，翻页时整张图稳稳地不跳。
+          <code>&lt;dr-step&gt;</code> 里也可以放每步各自的内容（代码、公式、任意 HTML），所有步骤叠在同一格，高度取最高的那一步。
+        </div>
+      </section>
+
+      <!-- ============ 06 ============ -->
+      <section class="chapter prose" id="math" style="--c: var(--blue)">
+        <div class="chapter-head"><span class="idx">06</span><h2>公式也是一等公民</h2></div>
+        <p class="kicker">TeX 写进标签里，排版交给浏览器原生的 MathML。</p>
+        <p>
+          还记得第一章的弹簧吗？那两行看起来随手写的代码，其实是
+          <dr-tip>阻尼弹簧<template>
+            <p><strong>阻尼弹簧</strong>：受力和偏离量成正比（胡克定律 <dr-katex>F = -kx</dr-katex>），同时有阻力不断消耗能量。</p>
+            <p>阻尼小就来回晃，阻尼大就慢慢停稳。</p>
+          </template></dr-tip>的离散形式。设目标位置是 <dr-katex>x^{*}</dr-katex>，每一帧：
+        </p>
+
+        <dr-katex display>v_{t+1} = d\,\bigl(v_t + k\,(x^{*} - x_t)\bigr), \qquad x_{t+1} = x_t + v_{t+1}</dr-katex>
+
+        <p>
+          其中 <dr-katex>k</dr-katex> 就是代码里的 <code>STIFFNESS</code>，<dr-katex>d</dr-katex> 是 <code>DAMPING</code>。
+          <dr-katex>d \lt 1</dr-katex> 保证每帧都损失一点速度，所以球最终会停下来；<dr-katex>d</dr-katex> 越接近 1，晃得越久。
+        </p>
+        <p>
+          上一章的二分查找也一样能用一行说清：长度为 <dr-katex>n</dr-katex> 的数组，最多比较
+        </p>
+
+        <dr-katex display>\left\lceil \log_2 (n + 1) \right\rceil \ \text{次}, \qquad n = 9 \;\Rightarrow\; \lceil \log_2 10 \rceil = 4</dr-katex>
+
+        <p>刚才找 26 只用了 3 次，没有超过这个上限。</p>
+      </section>
+
+      <!-- ============ 07 ============ -->
+      <section class="chapter prose" id="ai" style="--c: var(--violet)">
+        <div class="chapter-head"><span class="idx">07</span><h2>为 AI 而设计</h2></div>
+        <p class="kicker">接口、校验、自检，一条龙都是给模型准备的。</p>
+        <p>
+          AI 只读一份 <dr-tip ref="dts">durer.d.ts</dr-tip>：顶部是怎么写页面的指导，后面是每个元素的属性说明。
+          写完先跑 lint —— 它和运行时用<em>同一个</em>编译器、<em>同一张</em>导入白名单，lint 过了，浏览器里就不会因为语法和导入白屏；
+          再在浏览器里 <code>await durer.ready()</code>，渲染期的错也逃不掉。
+        </p>
+
+        <dr-retikz caption="durer-html skill 的工作流：两道关卡，任何一道不过都回去改">
+          <script type="text/jsx">
+            <Layout>
+              <Node id="read" position={[0, 0]} shape={{ type: "rectangle", params: { cornerRadius: 10 } }}
+                padding={10} stroke="#8b6cff" fill="#8b6cff" fillOpacity={0.12}>{"读\ndurer.d.ts"}</Node>
+              <Node id="write" position={[150, 0]} shape={{ type: "rectangle", params: { cornerRadius: 10 } }}
+                padding={10} stroke="#00b8d9" fill="#00b8d9" fillOpacity={0.12}>{"写\nHTML"}</Node>
+              <Node id="lint" position={[300, 0]} shape="diamond" padding={4}
+                stroke="#ffb020" fill="#ffb020" fillOpacity={0.14}>lint</Node>
+              <Node id="browser" position={[460, 0]} shape="diamond" padding={4}
+                stroke="#ffb020" fill="#ffb020" fillOpacity={0.14}>ready()</Node>
+              <Node id="ship" position={[610, 0]} shape={{ type: "rectangle", params: { cornerRadius: 10 } }}
+                padding={10} strokeWidth={2} stroke="#1a9f55" fill="#1a9f55" fillOpacity={0.14}>交付</Node>
+              <Draw way={["read", "write"]} arrow="->" />
+              <Draw way={["write", "lint"]} arrow="->" />
+              <Draw way={["lint", { label: { text: "通过", font: { size: 12 } } }, "browser"]} arrow="->" />
+              <Draw way={["browser", { label: { text: "全 ready", font: { size: 12 } } }, "ship"]} arrow="->" />
+              <Draw way={["lint", { label: { text: "有 error", side: "top", font: { size: 12 }, textColor: "#e5484d" } }, { bend: "right", angle: 55 }, "write"]}
+                arrow="->" stroke="#e5484d" dashPattern={[4, 3]} />
+              <Draw way={["browser", { label: { text: "有元素报错", side: "bottom", font: { size: 12 }, textColor: "#e5484d" } }, { bend: "left", angle: 35 }, "write"]}
+                arrow="->" stroke="#e5484d" dashPattern={[4, 3]} />
+            </Layout>
+          </script>
+        </dr-retikz>
+
+        <p>报错写得具体到 AI 能直接照着改：</p>
+        <div class="cols">
+          <dr-code lang="bash" title="lint">
+            <script type="text/plain">
+              $ node lint.mjs page.html
+              page.html:42  错误  #demo
+                不能导入 "lodash"：页面跑在 CDN
+                上没有 npm，能导入的只有 react…
+              page.html:87  错误  <dr-tip>#3
+                ref="fiber" 找不到对应的
+                <template id="fiber">
+            </script>
+          </dr-code>
+          <dr-code lang="js" title="浏览器控制台" highlight="5-7">
+            <script type="text/plain">
+              await durer.ready()
+              [
+                { tag: "dr-react", ref: "demo",
+                  state: "ready" },
+                { tag: "dr-retikz", ref: "dr-retikz#1",
+                  state: "error",
+                  message: "DrawWay is not defined" }
+              ]
+            </script>
+          </dr-code>
+        </div>
+      </section>
+
+      <!-- ============ 快速开始 ============ -->
+      <section class="wide cta" id="start">
+        <h2>三十秒上手</h2>
+        <p>新建一个 HTML 文件，粘进去，用浏览器打开。或者装上 skill，让 AI 替你写。</p>
+        <dr-code class="start-code">
+          <script type="text/plain" data-file="hello.html" data-highlight="1">
+            <script src="https://cdn.jsdelivr.net/npm/durer@0.1.0/dist/durer.js"><\/script>
+
+            <dr-react title="Hello">
+              <script type="text/jsx">
+                export default () => <h1>你好，durer</h1>;
+              <\/script>
+            </dr-react>
+          </script>
+          <script type="text/plain" data-file="install-skill.sh">
+            # 给 Claude Code 装上 skill，之后说「用 durer 写一个讲解页」就行
+            ln -s "$PWD/skills/durer-html" ~/.claude/skills/durer-html
+          </script>
+        </dr-code>
+        <div class="actions" style="justify-content: center">
+          <a class="btn primary" href="#demo">回到演示</a>
+          <a class="btn ghost" href="./elements.html">元素核对页</a>
+          <a class="btn ghost" href="./retikz.html">retikz 写法核对页</a>
+        </div>
+      </section>
+
+      <template id="sucrase">
+        <p><strong>sucrase</strong>：一个只做语法转换、不做类型检查的超快编译器。</p>
+        <p>把 JSX 和 TypeScript 变成浏览器能跑的 JS，几十行代码只要几毫秒，所以能边打字边重编。</p>
+      </template>
+      <template id="shadow-dom">
+        <p><strong>Shadow DOM</strong>：挂在元素上的一棵独立 DOM 子树，内外样式互不影响。</p>
+        <p>浏览器原生的 <code>&lt;video&gt;</code> 控制条就是这么做的。</p>
+      </template>
+      <template id="retikz">
+        <p><strong>retikz</strong>：开源的 TikZ 风格绘图库，图的核心是一份 JSON IR，React 组件只是写 IR 的一种方式。</p>
+        <p>输出 SVG 或 Canvas，支持动画和交互。</p>
+      </template>
+      <template id="tikz">
+        <p><strong>TikZ</strong>：LaTeX 里最常用的绘图宏包，用 <code>\node</code>、<code>\draw</code> 这样的命令声明式地画图，论文里的示意图大多出自它。</p>
+      </template>
+      <template id="chunk">
+        <p><strong>按需加载</strong>：代码被拆成几个文件（chunk），入口只放必需的部分，其余用动态 <code>import()</code> 在用到时才下载。</p>
+        <p>durer 的 chunk 地址跟着 <code>durer.js</code> 自己走，所以从任何 CDN 引入都能找到。</p>
+      </template>
+      <template id="top-layer">
+        <p><strong>顶层（top layer）</strong>：浏览器在所有内容之上单独维护的一层，不受 <code>z-index</code> 和 <code>overflow</code> 影响。</p>
+        <p>durer 用 <dr-tip placement="bottom" tip="HTML 原生的弹出层 API：给元素加 popover 属性，调用 showPopover() 就能把它放进顶层。">Popover API</dr-tip> 把气泡放进去。</p>
+      </template>
+      <template id="dts">
+        <p><strong>.d.ts</strong>：TypeScript 的类型声明文件，只描述接口、不含实现。</p>
+        <p>模型对这种格式非常熟，读它比读散文文档更不容易猜错属性名。</p>
+      </template>
+    </main>
+
+    <footer>
+      durer — 以丢勒命名，他写过用图解讲几何与透视的教学书。 · MIT
+    </footer>
+  </body>
+</html>

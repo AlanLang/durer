@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>React 渲染是怎么回事</title>
+    <script src="./durer.js"></script>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --ink: light-dark(#1f2328, #e6e7ea);
+        --paper: light-dark(#fbfaf7, #141518);
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font: 16px/1.75 -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 48px 16px 96px;
+      }
+      h1 {
+        font-size: 34px;
+        line-height: 1.25;
+        margin: 0 0 8px;
+      }
+      .lede {
+        color: color-mix(in srgb, var(--ink) 65%, transparent);
+        margin: 0 0 40px;
+      }
+      h2 {
+        margin-top: 48px;
+        font-size: 22px;
+      }
+      code {
+        font: 0.9em ui-monospace, Menlo, monospace;
+        background: color-mix(in srgb, var(--ink) 8%, transparent);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>React 渲染是怎么回事</h1>
+      <p class="lede">从一次 <code>setState</code> 到屏幕更新，中间发生了什么。</p>
+
+      <h2>状态变了，界面跟着变</h2>
+      <p>
+        组件是一个函数，输入是 props 和 state，输出是一棵
+        <dr-tip tip="用普通 JS 对象描述的界面结构，创建和比较都比真实 DOM 便宜得多">虚拟 DOM</dr-tip>。
+        调用 <code>setCount</code> 会让 React 重新执行这个函数，再把新旧两棵树做一次<dr-tip ref="reconcile">协调</dr-tip>。
+        改一改右边的代码试试。
+      </p>
+
+      <dr-react title="计数器" preview-height="120">
+        <script type="text/jsx">
+          import { useState } from "react";
+
+          export default function Counter() {
+            const [count, setCount] = useState(0);
+            return (
+              <div className="card">
+                <p>点了 <strong>{count}</strong> 次</p>
+                <button onClick={() => setCount(count + 1)}>+1</button>
+                <button onClick={() => setCount(0)}>归零</button>
+              </div>
+            );
+          }
+        </script>
+        <style>
+          .card { font-family: system-ui; }
+          button { margin-right: 8px; padding: 6px 14px; border-radius: 6px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); background: transparent; color: inherit; cursor: pointer; }
+        </style>
+      </dr-react>
+
+      <h2>一次更新经过哪几步</h2>
+      <p>
+        渲染分成两个阶段：<dr-tip tip="执行组件函数、比对新旧树，可以被打断">render 阶段</dr-tip>只计算，不碰 DOM；
+        <dr-tip>commit 阶段<template>
+          <p><strong>commit 阶段</strong>一次性把变更写进真实 DOM，然后跑 <code>useLayoutEffect</code>、
+          绘制后再跑 <code>useEffect</code>。这一步<em>不可中断</em>。</p>
+          <p>想知道为什么要分两段？看 <dr-tip ref="fiber">Fiber</dr-tip>。</p>
+        </template></dr-tip>才真正落地。
+      </p>
+
+      <dr-retikz caption="setState 之后的流水线" show-code>
+        <script type="text/jsx">
+          <Layout>
+            <Node id="set" position={[0, 0]}>setState</Node>
+            <Node id="render" position={[150, 0]}>render</Node>
+            <Node id="diff" position={[300, 0]}>diff</Node>
+            <Node id="commit" position={[450, 0]}>commit</Node>
+            <Draw way={["set", "render"]} arrow="->" />
+            <Draw way={["render", "diff"]} arrow="->" />
+            <Draw way={["diff", "commit"]} arrow="->" />
+          </Layout>
+        </script>
+      </dr-retikz>
+
+      <template id="reconcile">
+        <p><strong>协调（reconciliation）</strong>：比较新旧两棵树，找出最少的 DOM 改动。</p>
+        <p>同层比较、按 <code>key</code> 认人，所以列表一定要给稳定的 key。</p>
+      </template>
+      <template id="fiber">
+        <p><strong>Fiber</strong> 是 React 16 起的协调引擎：把渲染拆成一个个小单元，浏览器忙时可以先让出主线程。</p>
+      </template>
+    </main>
+  </body>
+</html>

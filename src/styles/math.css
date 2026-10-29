@@ -1,0 +1,23 @@
+:host {
+  display: inline;
+}
+:host([display]) {
+  display: block;
+  margin: 1em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+math {
+  font-size: 1.08em;
+}
+:host([display]) math {
+  font-size: 1.2em;
+}
+.error {
+  font: 0.85em var(--_mono);
+  color: var(--_error);
+  background: var(--_error-bg);
+  border-radius: 4px;
+  padding: 0 4px;
+}

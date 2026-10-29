@@ -1,0 +1,2 @@
+# 主题行 `<emoji> <描述>`，规则见 scripts/commit-msg.mjs
+node scripts/commit-msg.cli.mjs "$1"

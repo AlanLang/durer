@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>新元素核对</title>
+    <script src="./durer.js"></script>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font: 15px/1.7 system-ui, "PingFang SC", sans-serif; max-width: 860px; margin: 32px auto; padding: 0 16px; }
+    </style>
+  </head>
+  <body>
+    <h3>dr-code：单文件、标题、行高亮、行号</h3>
+    <dr-code id="single" lang="tsx" title="Counter.tsx" highlight="4,6-7" line-numbers>
+      <script type="text/plain">
+        import { useState } from "react";
+
+        export function Counter({ step = 1 }: { step?: number }) {
+          const [count, setCount] = useState(0);
+          // 每次加 step
+          return <button onClick={() => setCount(count + step)}>{count}</button>;
+        }
+      </script>
+    </dr-code>
+
+    <h3>dr-code：多文件标签页 + HTML 里的 &lt;\/script&gt;</h3>
+    <dr-code id="tabs">
+      <script type="text/plain" data-file="index.html">
+        <!doctype html>
+        <script src="https://cdn.jsdelivr.net/npm/durer@0.1.0/dist/durer.js"><\/script>
+        <dr-tip tip="解释">术语</dr-tip>
+      </script>
+      <script type="text/plain" data-file="style.css">
+        :root { color-scheme: light dark; }
+        .card { padding: 12px; border-radius: 8px; }
+      </script>
+      <script type="text/plain" data-file="install.sh">
+        # 安装 skill
+        ln -s "$PWD/skills/durer-html" ~/.claude/skills/durer-html
+        echo "done" && exit 0
+      </script>
+    </dr-code>
+
+    <h3>dr-code：diff，无标题（复制按钮浮在右上角）</h3>
+    <dr-code id="diff" lang="js" diff>
+      <script type="text/plain">
+         function add(a, b) {
+        -  return a - b;
+        +  return a + b;
+         }
+      </script>
+    </dr-code>
+
+    <h3>dr-react：多文件（相对导入 + 可改的 CSS）</h3>
+    <dr-react id="multi" title="多文件演示" preview-height="140">
+      <script type="text/jsx" data-file="App.jsx">
+        import { useState } from "react";
+        import { clamp } from "./utils";
+        import "./style.css";
+
+        export default function App() {
+          const [n, setN] = useState(5);
+          return (
+            <div className="box">
+              <button onClick={() => setN(clamp(n - 1, 0, 10))}>−</button>
+              <b>{n}</b>
+              <button onClick={() => setN(clamp(n + 1, 0, 10))}>+</button>
+            </div>
+          );
+        }
+      </script>
+      <script type="text/jsx" data-file="utils.js">
+        export const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+      </script>
+      <script type="text/css" data-file="style.css">
+        .box { display: flex; gap: 12px; align-items: center; font-size: 20px; }
+        button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid currentColor; background: transparent; color: inherit; }
+      </script>
+    </dr-react>
+
+    <h3>dr-steps：每步自己的内容</h3>
+    <dr-steps id="own" title="冒泡排序第一轮">
+      <dr-step caption="比较前两个数：5 &gt; 3，交换"><dr-code lang="js"><script type="text/plain">[5, 3, 8, 1] → [3, 5, 8, 1]</script></dr-code></dr-step>
+      <dr-step caption="比较 5 和 8：不交换"><dr-code lang="js"><script type="text/plain">[3, 5, 8, 1] → [3, 5, 8, 1]</script></dr-code></dr-step>
+      <dr-step caption="比较 8 和 1：交换，最大的数沉到末尾"><dr-code lang="js"><script type="text/plain">[3, 5, 8, 1] → [3, 5, 1, 8]</script></dr-code></dr-step>
+    </dr-steps>
+
+    <h3>dr-steps：一张图跟着 step 变</h3>
+    <dr-steps id="shared" title="一次请求">
+      <dr-retikz>
+        <script type="text/jsx">
+          <Layout>
+            <Node id="a" position={[0, 0]} stroke={step === 0 ? "#8b6cff" : undefined} strokeWidth={step === 0 ? 2 : 1}>浏览器</Node>
+            <Node id="b" position={[180, 0]} stroke={step === 1 ? "#8b6cff" : undefined} strokeWidth={step === 1 ? 2 : 1}>服务器</Node>
+            <Node id="c" position={[360, 0]} stroke={step === 2 ? "#8b6cff" : undefined} strokeWidth={step === 2 ? 2 : 1}>数据库</Node>
+            <Draw way={["a", "b"]} arrow="->" opacity={step >= 1 ? 1 : 0.2} />
+            <Draw way={["b", "c"]} arrow="->" opacity={step >= 2 ? 1 : 0.2} />
+          </Layout>
+        </script>
+      </dr-retikz>
+      <dr-step caption="浏览器发出请求"></dr-step>
+      <dr-step caption="服务器收到，开始处理"></dr-step>
+      <dr-step caption="服务器去数据库取数"></dr-step>
+    </dr-steps>
+
+    <h3>dr-katex</h3>
+    <p>
+      质能方程 <dr-katex id="inline">E = mc^2</dr-katex>，以及欧拉恒等式 <dr-katex>e^{i\pi} + 1 = 0</dr-katex>。
+      <dr-tip>悬停看公式<template><p>二次方程的根：<dr-katex>x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}</dr-katex></p></template></dr-tip>
+    </p>
+    <dr-katex id="block" display>\sum_{i=1}^{n} i = \frac{n(n+1)}{2} \qquad \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2}</dr-katex>
+    <dr-katex id="bad">\frac{1}{</dr-katex>
+  </body>
+</html>

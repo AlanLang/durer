@@ -1,0 +1,171 @@
+:host {
+  display: block;
+  margin: 1.25em 0;
+  font-size: 14px;
+  color: var(--_fg);
+}
+:host([hidden]) {
+  display: none;
+}
+* {
+  box-sizing: border-box;
+}
+.frame {
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  background: var(--_bg);
+  overflow: hidden;
+  container-type: inline-size;
+}
+.figure {
+  border: none;
+  background: transparent;
+  margin: 0;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--_border);
+  background: var(--_surface);
+}
+.figure .bar {
+  border: none;
+  background: transparent;
+  justify-content: flex-end;
+  padding: 0;
+  min-height: 0;
+}
+.title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button {
+  font: inherit;
+  font-size: 12px;
+  color: var(--_muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+button:hover {
+  color: var(--_fg);
+  background: var(--_bg);
+  border-color: var(--_border);
+}
+button[aria-pressed="true"] {
+  color: var(--_accent);
+}
+button:focus-visible {
+  outline: 2px solid var(--_accent);
+  outline-offset: 1px;
+}
+.body {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.preview {
+  position: relative;
+  min-height: var(--_preview-height, 0);
+  padding: 20px;
+  overflow: auto;
+}
+.figure .preview {
+  padding: 0;
+}
+.code {
+  position: relative;
+  min-width: 0;
+  height: var(--_code-height, auto);
+  max-height: var(--_code-max-height, 480px);
+  overflow: auto;
+  border-top: 1px solid var(--_border);
+  background: var(--_surface);
+}
+.figure .code {
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  margin-top: 8px;
+}
+.code[hidden] {
+  display: none;
+}
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid var(--_border);
+  background: var(--_surface);
+  overflow-x: auto;
+}
+.tabs[hidden],
+.pane[hidden] {
+  display: none;
+}
+.tabs button {
+  border-radius: 6px 6px 0 0;
+  border-bottom: none;
+  font-family: var(--_mono);
+  white-space: nowrap;
+}
+.tabs button[aria-selected="true"] {
+  color: var(--_fg);
+  background: var(--_bg);
+  border-color: var(--_border);
+  margin-bottom: -1px;
+}
+/* 编辑器加载前先把源码原样摆出来，加载完再换掉：不闪空白，没 JS 也看得到代码 */
+.fallback {
+  margin: 0;
+  padding: 4px 12px 4px 36px;
+  font: 13px / 1.6 var(--_mono);
+  white-space: pre;
+  color: var(--_fg);
+}
+@container (min-width: 720px) {
+  .frame[data-layout="split"] .body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .frame[data-layout="split"] .code {
+    border-top: none;
+    border-left: 1px solid var(--_border);
+    max-height: none;
+  }
+}
+.error {
+  margin: 0;
+  padding: 10px 12px;
+  border-top: 1px solid var(--_border);
+  background: var(--_error-bg);
+  color: var(--_error);
+  font: 12px / 1.5 var(--_mono);
+  white-space: pre-wrap;
+}
+.figure .error {
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  margin-top: 8px;
+}
+.error[hidden] {
+  display: none;
+}
+figcaption {
+  margin-top: 8px;
+  text-align: center;
+  color: var(--_muted);
+  font-size: 13px;
+}
+figcaption:empty {
+  display: none;
+}

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>retikz 写法核对</title>
+    <script src="./durer.js"></script>
+    <style>body { font: 15px/1.7 system-ui; max-width: 900px; margin: 32px auto; padding: 0 16px; }</style>
+  </head>
+  <body>
+    <h3>1 相对定位 + 边标注 + 弯曲 + 样式</h3>
+    <dr-retikz id="relative" show-code>
+      <script type="text/jsx">
+        <Layout nodeDistance={60}>
+          <Node id="a" position={[0, 0]} fill="#e8f0fe" stroke="#2f6feb" shape={{ type: "rectangle", params: { cornerRadius: 6 } }}>请求</Node>
+          <Node id="b" position={{ direction: "right", of: "a", distance: 100 }} shape="circle" fill="#fff4e5">缓存</Node>
+          <Node id="c" position={{ direction: "bottom", of: "b", distance: 100 }} shape="diamond">命中?</Node>
+          <Node id="d" position={{ direction: "left", of: "c", distance: 100 }} dashed>回源</Node>
+          <Draw way={["a", { label: "查" }, "b"]} arrow="->" />
+          <Draw way={["b", "c"]} arrow="->" />
+          <Draw way={["c", { label: "否" }, "d"]} arrow="->" stroke="#b42318" />
+          <Draw way={["d", { bend: "left" }, "a"]} arrow="->" dashPattern={[4, 3]} />
+        </Layout>
+      </script>
+    </dr-retikz>
+
+    <h3>2 y 轴方向（[0,0] → [0,60]）与折角</h3>
+    <dr-retikz id="axis">
+      <script type="text/jsx">
+        <Layout>
+          <Node id="o" position={[0, 0]}>原点 [0,0]</Node>
+          <Node id="y" position={[0, 60]}>[0,60]</Node>
+          <Node id="x" position={[160, 60]}>[160,60]</Node>
+          <Draw way={["o", "-|", "x"]} arrow="->" />
+          <Draw way={["o", "y"]} arrow="->" />
+        </Layout>
+      </script>
+    </dr-retikz>
+
+    <h3>3 模块写法：循环生成</h3>
+    <dr-retikz id="loop">
+      <script type="text/jsx">
+        const steps = ["解析", "编译", "运行", "渲染"];
+
+        export default function Pipeline() {
+          return (
+            <Layout>
+              {steps.map((name, i) => (
+                <Node key={name} id={`s${i}`} position={[i * 110, 0]}>{name}</Node>
+              ))}
+              {steps.slice(1).map((_, i) => (
+                <Draw key={i} way={[`s${i}`, `s${i + 1}`]} arrow="->" />
+              ))}
+            </Layout>
+          );
+        }
+      </script>
+    </dr-retikz>
+
+    <h3>4 authoring.md 的示例</h3>
+    <dr-retikz id="authoring" caption="一次请求的往返">
+      <script type="text/jsx">
+        <Layout nodeDistance={200}>
+          <Node id="client" position={[0, 0]}>浏览器</Node>
+          <Node id="server" position={{ direction: "right", of: "client" }}>服务器</Node>
+          <Node id="db" position={{ direction: "bottom", of: "server", distance: 110 }} shape="circle">数据库</Node>
+          <Draw way={["client", { label: { text: "HTTP 请求", font: { size: 13 } } }, "server"]} arrow="->" />
+          <Draw way={["server", "db"]} arrow="<->" dashPattern={[4, 3]} />
+        </Layout>
+      </script>
+    </dr-retikz>
+
+    <h3>5 cheat sheet 逐项</h3>
+    <dr-retikz id="cheatsheet">
+      <script type="text/jsx">
+        <Layout>
+          <Node id="a" position={[0, 0]} stroke="#2f6feb" textColor="#2f6feb" font={{ size: 13, weight: "bold" }} padding={10}>stroke + font</Node>
+          <Node id="b" position={[200, 0]} label={{ text: "旁注", position: "bottom" }} minimumSize={60}>label</Node>
+          <Node id="c" position={[400, 0]} maxTextWidth={80}>{"第一行\n第二行"}</Node>
+          <Node id="d" position={[0, 140]} textColor="#b42318" dotted>textColor</Node>
+          <Node id="e" position={[400, 140]} shape="ellipse" fill="#e8f5e9" stroke="#2e7d32">ellipse</Node>
+          <Draw way={["a", [100, 70], "d"]} arrow="->" thickness="thick" />
+          <Draw way={["d", "|-", "e"]} arrow="->" roundedCorners={6} />
+          <Draw way={[[150, 110], [250, 110], [200, 170], DrawWay.Cycle]} fill="#fff4e5" stroke="#e8590c" />
+          <Draw way={["b", { bend: "right", angle: 40 }, "c"]} arrow="<->" />
+        </Layout>
+      </script>
+    </dr-retikz>
+
+    <h3>6 错误：未知导入</h3>
+    <dr-react id="bad-import" layout="preview">
+      <script type="text/jsx">
+        import _ from "lodash";
+        export default () => <p>{_.capitalize("x")}</p>;
+      </script>
+    </dr-react>
+  </body>
+</html>

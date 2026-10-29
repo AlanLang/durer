@@ -1,0 +1,165 @@
+:host {
+  display: block;
+  margin: 1.25em 0;
+  font-size: 13px;
+  color: var(--_fg);
+}
+* {
+  box-sizing: border-box;
+}
+.frame {
+  position: relative;
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  background: var(--_surface);
+  overflow: hidden;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 34px;
+  padding: 0 6px 0 4px;
+  border-bottom: 1px solid var(--_border);
+}
+.bar[hidden] {
+  display: none;
+}
+.title {
+  flex: 1;
+  min-width: 0;
+  padding-left: 8px;
+  font: 12px var(--_mono);
+  color: var(--_muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tabs {
+  flex: 1;
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+}
+button {
+  font: 12px var(--_mono);
+  color: var(--_muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+button:hover {
+  color: var(--_fg);
+  background: var(--_bg);
+  border-color: var(--_border);
+}
+button[aria-selected="true"] {
+  color: var(--_fg);
+  background: var(--_bg);
+  border-color: var(--_border);
+}
+button:focus-visible {
+  outline: 2px solid var(--_accent);
+  outline-offset: 1px;
+}
+/* 没有标题栏时，复制按钮浮在右上角，悬停才出现 */
+.float {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  background: var(--_surface);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.frame:hover .float,
+.float:focus-visible {
+  opacity: 1;
+}
+pre {
+  margin: 0;
+  padding: 12px 0;
+  overflow-x: auto;
+  font: 13px / 1.65 var(--_mono);
+  tab-size: 2;
+}
+pre[hidden] {
+  display: none;
+}
+code {
+  display: block;
+  min-width: max-content;
+  font: inherit;
+}
+.line {
+  display: block;
+  padding: 0 16px;
+  border-left: 3px solid transparent;
+}
+.line.hl {
+  background: color-mix(in srgb, var(--_accent) 12%, transparent);
+  border-left-color: var(--_accent);
+}
+.line.add {
+  background: color-mix(in srgb, #2da44e 14%, transparent);
+  border-left-color: #2da44e;
+}
+.line.del {
+  background: color-mix(in srgb, #cf222e 12%, transparent);
+  border-left-color: #cf222e;
+}
+.line.del .txt {
+  opacity: 0.7;
+}
+.ln,
+.mark {
+  display: inline-block;
+  user-select: none;
+  color: var(--_muted);
+  opacity: 0.7;
+}
+.ln {
+  width: 2.5em;
+  margin-right: 12px;
+  text-align: right;
+}
+.mark {
+  width: 1.2em;
+}
+.add .mark {
+  color: #2da44e;
+  opacity: 1;
+}
+.del .mark {
+  color: #cf222e;
+  opacity: 1;
+}
+.t-kw {
+  color: var(--_syn-keyword);
+}
+.t-str {
+  color: var(--_syn-string);
+}
+.t-num {
+  color: var(--_syn-number);
+}
+.t-com {
+  color: var(--_syn-comment);
+  font-style: italic;
+}
+.t-fn {
+  color: var(--_syn-function);
+}
+.t-tag {
+  color: var(--_syn-tag);
+}
+.t-attr {
+  color: var(--_syn-attr);
+}
+.t-def {
+  color: var(--_syn-def);
+}

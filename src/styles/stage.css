@@ -1,0 +1,15 @@
+/* 演示组件自己那一层 shadow root 的底子：只给继承下来的字体和颜色，其余交给演示自己的 <style> */
+:host {
+  display: block;
+  color: inherit;
+  font: inherit;
+}
+.durer-figure {
+  display: flex;
+  justify-content: center;
+}
+.durer-figure svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}

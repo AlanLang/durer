@@ -1,0 +1,22 @@
+:host {
+  display: inline;
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: var(
+    --durer-term-underline,
+    color-mix(in srgb, currentColor 55%, transparent)
+  );
+  border-radius: 2px;
+}
+:host(:hover),
+:host([data-open]) {
+  text-decoration-color: var(--_accent);
+  background: color-mix(in srgb, var(--_accent) 10%, transparent);
+}
+:host(:focus-visible) {
+  outline: 2px solid var(--_accent);
+  outline-offset: 1px;
+}
