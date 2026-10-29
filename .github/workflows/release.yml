@@ -1,0 +1,93 @@
+# package.json 的 version 变了就发 npm：推到 main、且这次推送改了 package.json 时检查一次。
+#
+# 用 npm 的 trusted publishing（OIDC）：不存 token，npm 认的是「这个仓库的这个 workflow」，
+# 需要先在 npmjs.com 的 durerjs → Settings → Trusted publishing 里把 AlanLang/durer 的 release.yml 加进去。
+# 发完打 v<版本> 的 tag、建 GitHub Release。
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write # 打 tag、建 Release
+  id-token: write # trusted publishing 换 npm 的短期凭证
+
+# 两次推送挨得很近时一个一个来，免得同一个版本发两次
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # npm 上已经有这个版本就什么都不做：package.json 改的是别的字段，或者手动重跑
+      - name: 看版本是不是新的
+        id: version
+        run: |
+          name=$(node -p 'require("./package.json").name')
+          version=$(node -p 'require("./package.json").version')
+          code=$(curl -s -o /dev/null -w '%{http_code}' "https://registry.npmjs.org/${name}/${version}")
+          echo "name=${name}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          # 带预发布后缀（0.2.0-beta.1）的发到 next，不顶掉 latest
+          if [[ "$version" == *-* ]]; then echo "tag=next" >> "$GITHUB_OUTPUT"; else echo "tag=latest" >> "$GITHUB_OUTPUT"; fi
+          case "$code" in
+            200) echo "publish=false" >> "$GITHUB_OUTPUT"; echo "::notice::${name}@${version} 已经在 npm 上了，跳过" ;;
+            404) echo "publish=true" >> "$GITHUB_OUTPUT"; echo "::notice::准备发布 ${name}@${version}" ;;
+            *) echo "::error::查询 npm 失败（HTTP ${code}），不确定版本是否已存在，不发"; exit 1 ;;
+          esac
+
+      - if: steps.version.outputs.publish == 'true'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - if: steps.version.outputs.publish == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - if: steps.version.outputs.publish == 'true'
+        name: trusted publishing 要 npm ≥ 11.5.1
+        run: |
+          npm --version
+          node -e 'const [a,b,c]=process.argv[1].split(".").map(Number); process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)' "$(npm --version)" \
+            || { echo "::error::npm $(npm --version) 太旧，trusted publishing 要 11.5.1 以上"; exit 1; }
+
+      - if: steps.version.outputs.publish == 'true'
+        run: bun install --frozen-lockfile
+
+      - if: steps.version.outputs.publish == 'true'
+        run: bun run check
+
+      # skill 里的 durer.d.ts 带着 CDN 的版本号；改了版本却没重新 build 并提交，skill 会一直指着旧版本
+      - if: steps.version.outputs.publish == 'true'
+        name: skill 里的产物和源码一致
+        run: |
+          if ! git diff --quiet -- skills/; then
+            git diff --stat -- skills/
+            echo "::error::skills/ 里的 d.ts / lint 和源码对不上：本地跑 bun run build 再把 skills/ 一起提交（用 npm version 改版本会自动做）"
+            exit 1
+          fi
+
+      # check 刚跑过，publish 时不再跑 prepublishOnly
+      - if: steps.version.outputs.publish == 'true'
+        run: npm publish --access public --tag ${{ steps.version.outputs.tag }} --ignore-scripts
+
+      - if: steps.version.outputs.publish == 'true'
+        name: 打 tag、建 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          prerelease=""
+          [[ "${{ steps.version.outputs.tag }}" == next ]] && prerelease="--prerelease"
+          gh release create "$TAG" --target "$GITHUB_SHA" --generate-notes $prerelease \
+            --notes "npm：https://www.npmjs.com/package/${{ steps.version.outputs.name }}/v/${{ steps.version.outputs.version }}"

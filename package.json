@@ -29,6 +29,7 @@
     "type:check": "tsc --noEmit",
     "check": "bun run lint && bun run type:check && bun run test && bun run build",
     "prepublishOnly": "bun run check",
+    "version": "bun run build && git add skills/durer-html",
     "prepare": "husky"
   },
   "dependencies": {},

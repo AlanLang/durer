@@ -58,4 +58,15 @@ bun run check        # biome + tsc + 单测 + build（build 会把 d.ts 和 lint
 展示页由 `.github/workflows/pages.yml` 发布：推到 `main` 后先跑 `bun run check`，通过了再 `bun run build:site`
 （examples/ 的页面 + 运行时产物 → `site/`）发到 GitHub Pages。
 
+发版：
+
+```bash
+npm version patch        # 或 minor / major / prerelease --preid beta
+git push --follow-tags
+```
+
+`npm version` 改完版本号会重新 build，把 skill 里带新 CDN 版本号的 `durer.d.ts` 一起提交（提交说明 `🔖 发布 vX.Y.Z`，
+见 `.npmrc`）。推到 `main` 后 `.github/workflows/release.yml` 发现 npm 上还没有这个版本，就跑完检查发布到 npm
+（trusted publishing，不用 token；带 `-` 的预发布版本发到 `next`），再建 GitHub Release。版本已存在时什么都不做。
+
 安装 skill：`ln -s "$PWD/skills/durer-html" ~/.claude/skills/durer-html`
