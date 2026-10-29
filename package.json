@@ -1,6 +1,6 @@
 {
   "name": "durerjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI 写的讲解型 HTML 的运行时：一个 <script> 引入，页面里就能放可编辑的 React 演示、retikz 图和悬浮解释",
   "type": "module",
   "license": "MIT",
